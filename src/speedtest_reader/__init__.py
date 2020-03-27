@@ -11,7 +11,6 @@ import pandas as pd
 from pkg_resources import get_distribution, DistributionNotFound
 
 from speedtest_reader import util
-from speedtest_reader.util import ValidationException
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
@@ -59,10 +58,7 @@ class Reader:
 
         # eager initialisation
         self._status = "INIT"
-        try:
-            self._ramdf = self.copy_df(None, None)
-        except Exception as e:
-            raise ValidationException(e, "Cannot read '{}'.".format(source))
+        self._ramdf = self.copy_df(None, None)
         self._status = "READ"
 
     @util.stopwatch
@@ -109,12 +105,13 @@ class Reader:
         )
 
         # Find index values for slicing.
-        lower = self._ramdf.index.searchsorted(start)
-        upper = self._ramdf.index.searchsorted(end)
+        if end:
+            upper = self._ramdf.index.searchsorted(end)
 
         # Slice according to values.
         df = self._ramdf
         if start:
+            lower = self._ramdf.index.searchsorted(start)
             if end:
                 df = df.iloc[lower:upper]
             else:
